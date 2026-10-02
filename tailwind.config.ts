@@ -1,9 +1,6 @@
-import { createTailwindPresetOfSimple } from '@lark-apaas/fullstack-presets';
+import type { Config } from 'tailwindcss';
 
 export default {
-  presets: [createTailwindPresetOfSimple()],
-  content: [
-    './client/src/**/*.{ts,tsx,css}',
-  ],
+  content: ['./index.html', './src/**/*.{ts,tsx}'],
   plugins: [],
-}
+} satisfies Config;

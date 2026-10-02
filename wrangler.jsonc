@@ -1,0 +1,13 @@
+{
+  "name": "rmbz1970-news",
+  "pages_build_output_dir": "dist",
+  "compatibility_date": "2026-10-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "news-site-db",
+      "database_id": "00000000-0000-4000-8000-000000000abc"
+    }
+  ]
+}
