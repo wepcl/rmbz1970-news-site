@@ -3,7 +3,7 @@ import type { EventContext } from '@cloudflare/workers-types';
 import { HttpError } from './http';
 import { verifyToken } from './crypto';
 import { getUserRow, mapUser, type UserRow } from './data';
-import type { NewsUser } from '@shared/api.interface';
+import type { NewsUser } from '../../shared/api.interface';
 import type { Env } from './env';
 
 type Ctx = EventContext<Env, string, unknown>;

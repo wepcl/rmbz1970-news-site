@@ -5,3 +5,7 @@ dist/
 .DS_Store
 .env
 .env.local
+.local-test.db*
+.test-entry.mjs
+.vercel/
+.probe.db*

@@ -1,7 +1,7 @@
 import { defineHandler, json, HttpError, readBody } from '../../_lib/http';
 import { verifyPassword, signToken } from '../../_lib/crypto';
 import { getUserByUsername, mapUser } from '../../_lib/data';
-import type { LoginRequest } from '@shared/api.interface';
+import type { LoginRequest } from '../../../shared/api.interface';
 
 export const onRequestPost = defineHandler(async (ctx) => {
   const body = await readBody<LoginRequest>(ctx.request);

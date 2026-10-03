@@ -1,7 +1,7 @@
 import { defineHandler, json, HttpError, readBody } from '../../_lib/http';
 import { hashPassword } from '../../_lib/crypto';
 import { getUserByUsername } from '../../_lib/data';
-import type { RegisterRequest } from '@shared/api.interface';
+import type { RegisterRequest } from '../../../shared/api.interface';
 
 export const onRequestPost = defineHandler(async (ctx) => {
   const body = await readBody<RegisterRequest>(ctx.request);

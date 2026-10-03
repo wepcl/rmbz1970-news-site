@@ -1,7 +1,7 @@
 import { defineHandler, json, HttpError, readBody } from '../../_lib/http';
 import { queryArticles, getArticleRow, mapArticle } from '../../_lib/data';
 import { getOperator } from '../../_lib/auth';
-import type { CreateArticleRequest } from '@shared/api.interface';
+import type { CreateArticleRequest } from '../../../shared/api.interface';
 
 function paging(url: URL): { page: number; pageSize: number } {
   let page = parseInt(url.searchParams.get('page') || '1', 10);

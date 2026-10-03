@@ -6,7 +6,7 @@ import type {
   UserRole,
   UserStatus,
   ArticleStatus,
-} from '@shared/api.interface';
+} from '../../shared/api.interface';
 
 export interface UserRow {
   id: string;
