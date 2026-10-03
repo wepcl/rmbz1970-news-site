@@ -1,0 +1,1 @@
+﻿Trigger file to force Vercel redeploy with POSTGRES_URL env (2026-10-03)
