@@ -13,15 +13,25 @@
  *   - params:  动态路径参数（来自 Vercel req.query）
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { TursoD1 } from './db';
+import { PgD1 } from './db';
 
 export type HandlerCtx = {
   request: Request;
-  env: { DB: TursoD1 };
+  env: { DB: PgD1 };
   params: Record<string, string>;
 };
 
 export type Handler = (ctx: HandlerCtx) => Promise<Response>;
+
+/** 从 Vercel 环境变量解析数据库连接串（Neon/Vercel Postgres 标准变量）。 */
+function dbUrl(): string {
+  return (
+    process.env.POSTGRES_URL ||
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL_NON_POOLING ||
+    ''
+  );
+}
 
 function makeRequest(req: VercelRequest): Request {
   const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
@@ -61,10 +71,7 @@ async function makeCtx(req: VercelRequest): Promise<HandlerCtx> {
   const ctx: HandlerCtx = {
     request: makeRequest(req),
     env: {
-      DB: new TursoD1(
-        process.env.TURSO_DATABASE_URL || '',
-        process.env.TURSO_AUTH_TOKEN,
-      ),
+      DB: new PgD1(dbUrl()),
     },
     params: (req.query as Record<string, string | string[]>) || {},
   };

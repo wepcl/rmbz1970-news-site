@@ -1,26 +1,69 @@
 /**
- * Turso (libSQL) 兼容 D1 风格的 prepare/bind/all/first/run API。
- * 使 functions/_lib/* 的代码无需改动即可在 Vercel 上运行。
+ * PostgreSQL 兼容 D1 风格的 prepare/bind/all/first/run API。
+ * 使 functions/_lib/* 的代码无需改动即可在 Vercel + Neon (Postgres) 上运行。
+ *
+ * 特性：
+ * - `?` 占位符自动转为 PostgreSQL 的 $1/$2...
+ * - BIGINT (int8) 自动转 number（时间戳、浏览量）
+ * - 首次连接自动执行建表 + 种子（幂等）
  */
-import { createClient, type Client, type InValue } from '@libsql/client';
+import { Pool, types } from 'pg';
+import { SCHEMA_SQL, SEED_SQL } from './schema';
 
-export class TursoD1 {
-  private client: Client;
+// int8 → number（毫秒时间戳约 1.7e12 < Number.MAX_SAFE_INTEGER，安全）
+types.setTypeParser(20, (v) => Number(v));
 
-  constructor(url: string, authToken?: string) {
-    this.client = createClient({ url, authToken });
+function convertPlaceholders(sql: string): string {
+  let n = 0;
+  return sql.replace(/\?/g, () => `$${++n}`);
+}
+
+export class PgD1 {
+  private pool: Pool;
+  private initPromise: Promise<void> | null = null;
+
+  constructor(connectionString: string) {
+    this.pool = new Pool({
+      connectionString,
+      ssl: { rejectUnauthorized: false },
+      max: 5,
+    });
   }
 
-  prepare(sql: string): TursoStatement {
-    return new TursoStatement(this.client, sql);
+  prepare(sql: string): PgStatement {
+    return new PgStatement(this, sql);
+  }
+
+  /** 确保表结构与种子数据已初始化（幂等）。 */
+  async ensureInit(): Promise<void> {
+    if (!this.initPromise) {
+      this.initPromise = this.doInit().catch((e) => {
+        this.initPromise = null;
+        throw e;
+      });
+    }
+    return this.initPromise;
+  }
+
+  private async doInit(): Promise<void> {
+    const res = await this.pool.query(
+      `SELECT 1 FROM information_schema.tables WHERE table_name = 'news_user'`,
+    );
+    if (res.rowCount && res.rowCount > 0) return;
+    await this.pool.query(SCHEMA_SQL);
+    await this.pool.query(SEED_SQL);
+  }
+
+  async query(text: string, values: unknown[] = []) {
+    return this.pool.query({ text, values });
   }
 }
 
-class TursoStatement {
-  private args: InValue[] = [];
+class PgStatement {
+  private args: unknown[] = [];
 
   constructor(
-    private client: Client,
+    private db: PgD1,
     private sql: string,
   ) {}
 
@@ -28,35 +71,31 @@ class TursoStatement {
     this.args = values.map((v) => {
       if (v === undefined || v === null) return null;
       if (typeof v === 'boolean') return v ? 1 : 0;
-      return v as InValue;
+      if (typeof v === 'bigint') return Number(v);
+      return v;
     });
     return this;
   }
 
-  /** 返回所有行（对象数组）。 */
+  private async exec<T>(): Promise<{ rows: T[]; rowCount: number | null }> {
+    await this.db.ensureInit();
+    const text = convertPlaceholders(this.sql);
+    const res = await this.db.query(text, this.args);
+    return { rows: res.rows as T[], rowCount: res.rowCount ?? 0 };
+  }
+
   async all<T = Record<string, unknown>>(): Promise<{ results: T[] }> {
-    const res = await this.client.execute({ sql: this.sql, args: this.args });
-    const results = (res.rows ?? []).map((r) => {
-      const obj: Record<string, unknown> = {};
-      for (const key of Object.keys(r)) {
-        const v = r[key];
-        // libSQL 对整数可能返回 bigint，统一转 number 避免 JSON 序列化报错
-        obj[key] = typeof v === 'bigint' ? Number(v) : v;
-      }
-      return obj as unknown as T;
-    });
-    return { results };
+    const { rows } = await this.exec<T>();
+    return { results: rows };
   }
 
-  /** 返回第一行或 null。 */
   async first<T = Record<string, unknown>>(): Promise<T | null> {
-    const { results } = await this.all<T>();
-    return results.length > 0 ? results[0] : null;
+    const { rows } = await this.exec<T>();
+    return rows.length > 0 ? rows[0] : null;
   }
 
-  /** 执行写入，返回变更行数。 */
   async run(): Promise<{ meta: { changes: number } }> {
-    const res = await this.client.execute({ sql: this.sql, args: this.args });
-    return { meta: { changes: Number(res.rowsAffected ?? 0) } };
+    const { rowCount } = await this.exec();
+    return { meta: { changes: rowCount ?? 0 } };
   }
 }

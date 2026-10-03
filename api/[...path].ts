@@ -3,7 +3,17 @@
  * functions/api/** 中的 Cloudflare Pages Functions 处理器。
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { TursoD1 } from './_lib/db';
+import { PgD1 } from './_lib/db';
+
+/** 从 Vercel 环境变量解析数据库连接串（Neon/Vercel Postgres 标准变量）。 */
+function dbUrl(): string {
+  return (
+    process.env.POSTGRES_URL ||
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL_NON_POOLING ||
+    ''
+  );
+}
 
 // ---------- 导入全部处理器 ----------
 import { onRequestPost as registerPost } from '../functions/api/auth/register';
@@ -176,10 +186,7 @@ export default async function handler(
     const ctx = {
       request: makeRequest(req),
       env: {
-        DB: new TursoD1(
-          process.env.TURSO_DATABASE_URL || '',
-          process.env.TURSO_AUTH_TOKEN,
-        ),
+        DB: new PgD1(dbUrl()),
       },
       params: matched.params,
     };
