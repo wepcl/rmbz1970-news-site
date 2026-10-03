@@ -1,7 +1,0 @@
-{"cases":[
-  {"id":1,"priority":"p0","description":"打开首页，页面无白屏，能看到新闻列表和复古风格导航栏"},
-  {"id":2,"priority":"p0","description":"打开分类页，页面布局正常，左侧分类导航+右侧新闻列表"},
-  {"id":3,"priority":"p0","description":"打开登录页，登录表单正常显示，按钮为蓝色复古高光样式"},
-  {"id":4,"priority":"p1","description":"打开注册页，注册表单正常显示，角色选择可用"},
-  {"id":5,"priority":"p1","description":"打开新闻详情页 /article/f583e26c-b4e1-40b1-a3d0-1baef8013f19，文章标题、内容、作者信息正确展示"}
-]}

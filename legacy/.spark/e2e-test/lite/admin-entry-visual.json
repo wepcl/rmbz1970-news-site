@@ -1,1 +1,0 @@
-{"cases":[{"id":1,"priority":"p0","description":"打开首页，检查顶部导航栏：能看到 Logo、首页、新闻分类菜单，右侧显示登录/注册按钮"},{"id":2,"priority":"p0","description":"打开登录页 /login，登录表单正常显示，有用户名、密码输入框和登录按钮"},{"id":3,"priority":"p1","description":"打开注册页 /register，注册表单正常显示，含用户名、密码、显示名称、角色选择"},{"id":4,"priority":"p1","description":"打开 /admin，查看后台管理页面是否正常渲染（未登录时可能跳转登录）"}]}
